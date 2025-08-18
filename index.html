@@ -86,6 +86,20 @@
         #historyList { list-style: none; padding: 0; margin-top: 10px; }
         #historyList li { background: #f0f2f5; padding: 10px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.3s; }
         #historyList li:hover { background: #e0e4e9; }
+        .example {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            text-align: left;
+            padding-left: 15px;
+        }
+        .example span {
+            background: #f0f2f5;
+            padding: 3px 8px;
+            border-radius: 15px;
+            margin: 0 2px;
+            display: inline-block;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -102,6 +116,9 @@
         <div id="Checker" class="tab-content active">
             <div class="input-group">
                 <textarea id="domainInput" placeholder="확인할 도메인을 입력하세요. (여러 개는 쉼표나 줄바꿈으로 구분)"></textarea>
+                <div class="example">
+                    예시: <span>google.com</span> <span>www.naver.com</span>
+                </div>
             </div>
             <button class="check-btn" id="checkBtn" onclick="checkDomains()">
                 <span id="btnText">만료일 확인</span>
