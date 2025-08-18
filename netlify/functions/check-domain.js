@@ -5,41 +5,41 @@ const lookup = util.promisify(whois.lookup);
 
 /**
  * WHOIS가 반환하는 원본 텍스트 데이터에서 필요한 정보(만료일, 등록일, 등록기관)를 추출하는 함수입니다.
- * .kr 도메인의 다양한 형식을 처리하도록 파싱 로직을 개선했습니다.
+ * 정규 표현식을 사용하여 .kr 도메인의 복잡한 형식을 포함한 모든 케이스를 처리하도록 파싱 로직을 대폭 개선했습니다.
  * @param {string} rawData - WHOIS 조회로 얻은 원본 텍스트 데이터
  * @returns {{expiry_date: string|null, creation_date: string|null, registrar: string|null}} - 추출된 정보 객체
  */
 function parseWhoisData(rawData) {
-    const lines = rawData.split('\n');
     let expiryDate = null;
     let creationDate = null;
     let registrar = null;
 
-    // [FIX] 키워드에서 불필요한 공백과 콜론을 모두 제거하여 비교 정확도 향상
-    const expiryKeywords = ['registry expiry date', 'registrar registration expiration date', 'expiry date', 'expires', 'expiration time', '만료일'];
-    const creationKeywords = ['creation date', 'registration date', 'registered on', 'created', '등록일'];
-    const registrarKeywords = ['registrar', 'registrar name', 'sponsoring registrar', '등록대행자'];
+    // 정규 표현식을 사용하여 키워드 뒤의 값을 추출하는 헬퍼 함수
+    // i 플래그: 대소문자 무시, \s*: 공백이 0개 이상 있음을 의미
+    const getValue = (regex) => {
+        const match = rawData.match(regex);
+        // match가 있고, 캡처 그룹(괄호 안의 내용)이 존재하면 해당 값을 반환
+        return match && match[1] ? match[1].trim() : null;
+    };
 
-    for (const line of lines) {
-        const separatorIndex = line.indexOf(':');
-        if (separatorIndex === -1) continue;
+    // 여러 종류의 키워드를 배열로 관리하여 하나씩 시도
+    const registrarKeywords = [/Registrar:\s*(.*)/i, /Registrar Name:\s*(.*)/i, /등록대행자\s*:\s*(.*)/i];
+    const expiryKeywords = [/Registry Expiry Date:\s*(.*)/i, /Registrar Registration Expiration Date:\s*(.*)/i, /Expiry Date:\s*(.*)/i, /expires:\s*(.*)/i, /만료일\s*:\s*(.*)/i];
+    const creationKeywords = [/Creation Date:\s*(.*)/i, /Registration Date:\s*(.*)/i, /created:\s*(.*)/i, /등록일\s*:\s*(.*)/i];
 
-        // 키를 추출하고 소문자로 변환 후, 양 끝 공백을 제거합니다.
-        const key = line.substring(0, separatorIndex).trim().toLowerCase();
-        const value = line.substring(separatorIndex + 1).trim();
-
-        // 키워드 목록에 현재 키가 포함되어 있는지 확인합니다.
-        if (!expiryDate && expiryKeywords.includes(key)) {
-            expiryDate = value;
-        }
-        if (!creationDate && creationKeywords.includes(key)) {
-            creationDate = value;
-        }
-        if (!registrar && registrarKeywords.includes(key)) {
-            registrar = value;
-        }
+    for (const regex of registrarKeywords) {
+        registrar = getValue(regex);
+        if (registrar) break;
     }
-
+    for (const regex of expiryKeywords) {
+        expiryDate = getValue(regex);
+        if (expiryDate) break;
+    }
+    for (const regex of creationKeywords) {
+        creationDate = getValue(regex);
+        if (creationDate) break;
+    }
+    
     return {
         expiry_date: expiryDate,
         creation_date: creationDate,
@@ -71,7 +71,6 @@ exports.handler = async (event) => {
     try {
         const rawData = await lookup(domain, { follow: 2, verbose: true });
         
-        // whois 라이브러리는 조회 결과를 배열로 반환할 수 있으므로, 문자열로 합칩니다.
         const rawText = Array.isArray(rawData) ? rawData.map(d => d.data).join('\n') : rawData;
 
         if (!rawText) {
