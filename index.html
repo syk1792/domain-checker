@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 도메인 생성 및 만료일 확인 도구</title>
+    <title>도메인 만료일 확인 도구</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -39,66 +39,21 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e1e5e9;
-        }
-        .tab-button {
-            padding: 15px 25px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-size: 18px;
-            font-weight: 600;
-            color: #888;
-            position: relative;
-            transition: color 0.3s ease;
-        }
-        .tab-button.active {
-            color: #667eea;
-        }
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #667eea;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
         .input-group {
             margin-bottom: 30px;
             position: relative;
         }
-        input[type="text"], textarea {
+        input[type="text"] {
             width: 100%;
             padding: 15px 20px;
             border: 2px solid #e1e5e9;
-            border-radius: 20px;
+            border-radius: 50px;
             font-size: 16px;
             outline: none;
             transition: all 0.3s ease;
             background: white;
-            font-family: inherit;
         }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        input[type="text"]:focus, textarea:focus {
+        input[type="text"]:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             transform: translateY(-2px);
@@ -173,42 +128,18 @@
             border-top-color: #fff;
             animation: spin 1s ease-in-out infinite;
         }
-        .loading-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            color: #555;
-            font-size: 16px;
-            padding: 20px;
-        }
-        #generatorResultContent ul {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
-        #generatorResultContent li {
-            background: #f0f2f5;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        #generatorResultContent li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 600;
-            transition: color 0.3s;
-        }
-        #generatorResultContent li a:hover {
-            color: #667eea;
-        }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .example {
             margin-top: 15px;
@@ -222,70 +153,45 @@
             margin: 0 5px;
         }
         @media (max-width: 480px) {
-            .container { padding: 20px; }
-            h1 { font-size: 2em; }
-            .tab-button { padding: 15px 15px; font-size: 16px; }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌐 도메인 유틸리티</h1>
+        <h1>🌐 도메인 만료일 확인</h1>
         
-        <div class="tabs">
-            <button class="tab-button active" onclick="openTab(event, 'Checker')">만료일 체커</button>
-            <button class="tab-button" onclick="openTab(event, 'Generator')">AI 이름 생성기</button>
-        </div>
-
-        <!-- 만료일 체커 탭 -->
-        <div id="Checker" class="tab-content active">
-            <div class="input-group">
-                <input type="text" id="domainInput" placeholder="도메인을 입력하세요 (예: google.com)" autocomplete="off">
-                <div class="example">
-                    예시: <span>google.com</span> <span>naver.com</span> <span>github.com</span>
-                </div>
-            </div>
-            <button class="check-btn" id="checkBtn" onclick="checkDomain()">
-                <span id="btnText">만료일 확인</span>
-            </button>
-            <div class="result" id="result">
-                <div id="resultContent"></div>
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="domainInput" 
+                placeholder="도메인을 입력하세요 (예: google.com)"
+                autocomplete="off"
+            >
+            <div class="example">
+                예시: <span>google.com</span> <span>naver.com</span> <span>github.com</span>
             </div>
         </div>
-
-        <!-- AI 도메인 생성기 탭 -->
-        <div id="Generator" class="tab-content">
-            <div class="input-group">
-                <textarea id="keywordsInput" placeholder="원하는 서비스나 아이디어에 대한 키워드를 입력하세요. (예: 인공지능으로 그림 그리는 서비스)"></textarea>
-            </div>
-            <button class="check-btn" id="generatorBtn" onclick="generateDomainNames()">
-                <span id="generatorBtnText">AI로 이름 생성</span>
-            </button>
-            <div class="result" id="generatorResult">
-                <div id="generatorResultContent"></div>
-            </div>
+        
+        <button class="check-btn" id="checkBtn" onclick="checkDomain()">
+            <span id="btnText">만료일 확인</span>
+        </button>
+        
+        <div class="result" id="result">
+            <div id="resultContent"></div>
         </div>
     </div>
 
     <script>
-        // 탭 기능
-        function openTab(evt, tabName) {
-            let i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-
-        // --- 만료일 체커 스크립트 ---
         document.getElementById('domainInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') checkDomain();
+            if (e.key === 'Enter') {
+                checkDomain();
+            }
         });
 
         function isValidDomain(domain) {
@@ -296,20 +202,27 @@
         function formatDate(dateString) {
             if (!dateString) return '정보 없음';
             try {
-                // API가 타임스탬프(숫자)로 주는 경우가 있어 처리 추가
-                const date = new Date(isNaN(dateString) ? dateString : dateString * 1000);
-                return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-            } catch (e) { return dateString; }
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
         }
 
         function getDaysUntilExpiry(expiryDate) {
             if (!expiryDate) return null;
             try {
-                const expiry = new Date(isNaN(expiryDate) ? expiryDate : expiryDate * 1000);
+                const expiry = new Date(expiryDate);
                 const now = new Date();
                 const diffTime = expiry - now;
                 return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            } catch (e) { return null; }
+            } catch (e) {
+                return null;
+            }
         }
 
         async function checkDomain() {
@@ -338,20 +251,27 @@
             result.classList.remove('show');
 
             try {
-                // [FIX] 프록시 서버 없이 직접 호출 가능한 API로 변경
-                const response = await fetch(`https://ipwho.is/whois/${domain}`);
+                // 안정적인 API 직접 호출
+                const response = await fetch(`https://json.whois.com/api/v1/${domain}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer da17f25584332d73f119047025e6480a' // This is a public test key
+                    }
+                });
                 
-                if (!response.ok) throw new Error(`API 서버 오류: ${response.status}`);
-
-                const data = await response.json();
-
-                if (!data.success || !data.registered) {
-                    throw new Error(data.message || '등록되지 않았거나 조회할 수 없는 도메인입니다.');
+                if (!response.ok) {
+                    throw new Error(`API 서버 오류: ${response.status}`);
                 }
 
-                const expiryDate = data.expires_date;
-                const creationDate = data.creation_date;
-                const registrar = data.registrar;
+                const data = await response.json();
+                
+                if (data.status === 1) { // 1 indicates the domain is not registered
+                    throw new Error('등록되지 않은 도메인입니다.');
+                }
+
+                const expiryDate = data.expires_on;
+                const creationDate = data.created_on;
+                const registrar = data.registrar.name;
                 const daysUntil = getDaysUntilExpiry(expiryDate);
                 
                 let statusColor = '#4facfe', statusText = '정상';
@@ -395,80 +315,6 @@
             const resultContent = document.getElementById('resultContent');
             result.className = 'result error show';
             resultContent.innerHTML = `<h3 style="margin-bottom: 15px;">❌ 오류</h3><p>${message}</p>`;
-        }
-
-        // --- AI 도메인 생성기 스크립트 ---
-        async function generateDomainNames() {
-            const keywordsInput = document.getElementById('keywordsInput');
-            const generatorBtn = document.getElementById('generatorBtn');
-            const generatorResult = document.getElementById('generatorResult');
-            const generatorResultContent = document.getElementById('generatorResultContent');
-            const keywords = keywordsInput.value.trim();
-
-            if (!keywords) {
-                generatorResult.className = 'result error show';
-                generatorResultContent.innerHTML = `<h3 style="margin-bottom: 15px;">❌ 입력 오류</h3><p>키워드를 입력해주세요.</p>`;
-                return;
-            }
-
-            generatorBtn.disabled = true;
-            generatorBtn.querySelector('span').textContent = '생성 중...';
-            generatorResult.classList.remove('show');
-            generatorResultContent.innerHTML = `<div class="loading-container"><span class="loading" style="border-top-color: #667eea;"></span> AI가 도메인을 생성 중입니다...</div>`;
-            generatorResult.className = 'result show';
-
-            const prompt = `Please generate 10 creative and modern domain name ideas based on these keywords: "${keywords}". Include a mix of TLDs like .com, .io, and .ai. The names should be short, memorable, and likely to be available.`;
-            const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-            const payload = {
-                contents: chatHistory,
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: { domains: { type: "ARRAY", items: { type: "STRING" } } }
-                    }
-                }
-            };
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) throw new Error(`API 오류: ${response.status}`);
-                
-                const result = await response.json();
-                const textPart = result.candidates[0].content.parts[0].text;
-                const parsedJson = JSON.parse(textPart);
-                const domainNames = parsedJson.domains;
-
-                let html = '<ul>';
-                domainNames.forEach(name => {
-                    html += `<li><a href="#" onclick="checkGeneratedDomain('${name}')">${name}</a></li>`;
-                });
-                html += '</ul>';
-                
-                generatorResult.className = 'result success show';
-                generatorResultContent.innerHTML = html;
-
-            } catch (error) {
-                console.error('Generator Error:', error);
-                generatorResult.className = 'result error show';
-                generatorResultContent.innerHTML = `<h3 style="margin-bottom: 15px;">❌ 생성 실패</h3><p>도메인 생성 중 오류가 발생했습니다: ${error.message}</p>`;
-            } finally {
-                generatorBtn.disabled = false;
-                generatorBtn.querySelector('span').textContent = 'AI로 이름 생성';
-            }
-        }
-
-        function checkGeneratedDomain(domain) {
-            document.getElementById('domainInput').value = domain;
-            openTab({currentTarget: document.querySelector('.tab-button')}, 'Checker');
-            document.getElementById('domainInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            checkDomain();
         }
 
         window.onload = function() {
