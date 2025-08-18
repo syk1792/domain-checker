@@ -251,27 +251,23 @@
             result.classList.remove('show');
 
             try {
-                // 안정적인 API 직접 호출
-                const response = await fetch(`https://json.whois.com/api/v1/${domain}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer da17f25584332d73f119047025e6480a' // This is a public test key
-                    }
-                });
+                // Netlify 서버 기능을 호출합니다.
+                const response = await fetch(`/.netlify/functions/check-domain?domain=${encodeURIComponent(domain)}`);
                 
                 if (!response.ok) {
-                    throw new Error(`API 서버 오류: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({ error: `서버 오류: ${response.status}` }));
+                    throw new Error(errorData.error);
                 }
 
                 const data = await response.json();
-                
-                if (data.status === 1) { // 1 indicates the domain is not registered
-                    throw new Error('등록되지 않은 도메인입니다.');
+
+                if (data.error) {
+                    throw new Error(data.error);
                 }
 
-                const expiryDate = data.expires_on;
-                const creationDate = data.created_on;
-                const registrar = data.registrar.name;
+                const expiryDate = data.expiry_date;
+                const creationDate = data.creation_date;
+                const registrar = data.registrar;
                 const daysUntil = getDaysUntilExpiry(expiryDate);
                 
                 let statusColor = '#4facfe', statusText = '정상';
