@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 도메인 유틸리티</title>
+    <title>도메인 만료일 확인 도구</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -16,7 +20,7 @@
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -31,283 +35,287 @@
             font-size: 2.5em;
             font-weight: 700;
             background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .tabs { display: flex; justify-content: center; margin-bottom: 30px; border-bottom: 2px solid #e1e5e9; }
-        .tab-button {
-            padding: 15px 25px; cursor: pointer; border: none; background: none;
-            font-size: 18px; font-weight: 600; color: #888; position: relative; transition: color 0.3s ease;
+        .input-group {
+            margin-bottom: 30px;
+            position: relative;
         }
-        .tab-button.active { color: #667eea; }
-        .tab-button.active::after {
-            content: ''; position: absolute; bottom: -2px; left: 0;
-            width: 100%; height: 2px; background-color: #667eea;
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
         }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .input-group { margin-bottom: 30px; position: relative; }
-        textarea {
-            width: 100%; padding: 15px 20px; border: 2px solid #e1e5e9; border-radius: 20px;
-            font-size: 16px; outline: none; transition: all 0.3s ease; background: white;
-            font-family: inherit; min-height: 120px; resize: vertical;
-        }
-        textarea:focus {
-            border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); transform: translateY(-2px);
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
         .check-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none;
-            padding: 15px 40px; border-radius: 50px; font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease; margin-top: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
         }
-        .check-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); }
-        .check-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
-        .result-container { margin-top: 30px; }
-        .result-card {
-            padding: 25px; border-radius: 15px; animation: slideIn 0.5s ease;
-            margin-bottom: 15px; position: relative;
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
-        .result-card.success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-        .result-card.error { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
-        .domain-info { text-align: left; margin-top: 20px; }
-        .info-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
-        .info-item:last-child { border-bottom: none; }
-        .info-label { font-weight: 600; opacity: 0.9; }
-        .info-value { font-weight: 400; max-width: 70%; word-break: break-all; }
-        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
-        .copy-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s; }
-        .copy-btn:hover { background: rgba(255, 255, 255, 0.4); }
-        #generatorResultContent ul { list-style: none; padding: 0; text-align: left; }
-        #generatorResultContent li { background: #f0f2f5; padding: 15px; border-radius: 10px; margin-bottom: 10px; font-size: 18px; }
-        #generatorResultContent li a { text-decoration: none; color: #333; font-weight: 600; transition: color 0.3s; }
-        #generatorResultContent li a:hover { color: #667eea; }
-        #historyContainer { margin-top: 20px; text-align: left;}
-        #historyContainer h3 { color: #555; }
-        #historyList { list-style: none; padding: 0; margin-top: 10px; }
-        #historyList li { background: #f0f2f5; padding: 10px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: background 0.3s; }
-        #historyList li:hover { background: #e0e4e9; }
+        .check-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+            animation: slideIn 0.5s ease;
+            position: relative;
+        }
+        .result.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .result.error {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        .result.show {
+            display: block;
+        }
+        .domain-info {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        .info-value {
+            font-weight: 400;
+            max-width: 70%;
+            word-break: break-all;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         .example {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 14px;
             color: #666;
-            text-align: left;
-            padding-left: 15px;
         }
         .example span {
             background: #f0f2f5;
             padding: 3px 8px;
             border-radius: 15px;
-            margin: 0 2px;
-            display: inline-block;
+            margin: 0 5px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 AI 도메인 유틸리티</h1>
+        <h1>🌐 도메인 만료일 확인</h1>
         
-        <div class="tabs">
-            <button class="tab-button active" onclick="openTab(event, 'Checker')">도메인 체커</button>
-            <button class="tab-button" onclick="openTab(event, 'Generator')">AI 이름 생성기</button>
-        </div>
-
-        <div id="Checker" class="tab-content active">
-            <div class="input-group">
-                <textarea id="domainInput" placeholder="확인할 도메인을 입력하세요. (여러 개는 쉼표나 줄바꿈으로 구분)"></textarea>
-                <div class="example">
-                    예시: <span>google.com</span> <span>www.naver.com</span>
-                </div>
-            </div>
-            <button class="check-btn" id="checkBtn" onclick="checkDomains()">
-                <span id="btnText">만료일 확인</span>
-            </button>
-            <div class="result-container" id="resultContainer"></div>
-            <div id="historyContainer">
-                <h3>최근 조회 기록</h3>
-                <ul id="historyList"></ul>
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="domainInput" 
+                placeholder="도메인을 입력하세요 (예: google.com)"
+                autocomplete="off"
+            >
+            <div class="example">
+                예시: <span>google.com</span> <span>naver.com</span> <span>github.com</span>
             </div>
         </div>
-
-        <div id="Generator" class="tab-content">
-            <div class="input-group">
-                <textarea id="keywordsInput" placeholder="원하는 서비스나 아이디어에 대한 키워드를 입력하세요. (예: 인공지능으로 그림 그리는 서비스)"></textarea>
-            </div>
-            <button class="check-btn" id="generatorBtn" onclick="generateDomainNames()">
-                <span id="generatorBtnText">AI로 이름 생성</span>
-            </button>
-            <div class="result-container" id="generatorResultContainer"></div>
+        
+        <button class="check-btn" id="checkBtn" onclick="checkDomain()">
+            <span id="btnText">만료일 확인</span>
+        </button>
+        
+        <div class="result" id="result">
+            <div id="resultContent"></div>
         </div>
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = "none");
-            document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove("active"));
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.classList.add("active");
+        document.getElementById('domainInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkDomain();
+            }
+        });
+
+        function isValidDomain(domain) {
+            const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
+            return domainRegex.test(domain);
         }
 
-        const HISTORY_KEY = 'domainCheckerHistory';
-
-        function saveToHistory(domain) {
-            let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-            if (!history.includes(domain)) {
-                history.unshift(domain);
-                history = history.slice(0, 10); // 최대 10개 저장
-                localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-                loadHistory();
+        function formatDate(dateString) {
+            if (!dateString) return '정보 없음';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
             }
         }
 
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            history.forEach(domain => {
-                const li = document.createElement('li');
-                li.textContent = domain;
-                li.onclick = () => {
-                    document.getElementById('domainInput').value = domain;
-                    checkDomains();
-                };
-                historyList.appendChild(li);
-            });
+        function getDaysUntilExpiry(expiryDate) {
+            if (!expiryDate) return null;
+            try {
+                const expiry = new Date(expiryDate);
+                const now = new Date();
+                const diffTime = expiry - now;
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            } catch (e) {
+                return null;
+            }
         }
 
-        function copyResults(button, domain) {
-            const card = button.closest('.result-card');
-            let textToCopy = '';
-            card.querySelectorAll('.info-item').forEach(item => {
-                const label = item.querySelector('.info-label').innerText;
-                const value = item.querySelector('.info-value').innerText;
-                textToCopy += `${label} ${value}\n`;
-            });
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                button.textContent = '복사 완료!';
-                setTimeout(() => { button.textContent = '결과 복사'; }, 2000);
-            });
-        }
-
-        async function checkDomains() {
+        async function checkDomain() {
             const domainInput = document.getElementById('domainInput');
             const checkBtn = document.getElementById('checkBtn');
-            const resultContainer = document.getElementById('resultContainer');
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
             const btnText = document.getElementById('btnText');
 
-            const domains = domainInput.value.trim().split(/[\s,]+/).filter(Boolean);
-            if (domains.length === 0) {
-                resultContainer.innerHTML = `<div class="result-card error"><h3>❌ 오류</h3><p>도메인을 입력해주세요.</p></div>`;
+            let domain = domainInput.value.trim().toLowerCase();
+            
+            if (!domain) {
+                showError('도메인을 입력해주세요.');
+                return;
+            }
+
+            domain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+
+            if (!isValidDomain(domain)) {
+                showError('올바른 도메인 형식이 아닙니다. (예: google.com)');
                 return;
             }
 
             checkBtn.disabled = true;
             btnText.innerHTML = '<span class="loading"></span> 확인 중...';
-            resultContainer.innerHTML = '';
+            result.classList.remove('show');
 
             try {
-                const response = await fetch(`/.netlify/functions/check-domain?domains=${encodeURIComponent(domains.join(','))}`);
-                if (!response.ok) throw new Error(`서버 오류: ${response.status}`);
-                const results = await response.json();
+                const response = await fetch(`/.netlify/functions/check-domain?domain=${encodeURIComponent(domain)}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `서버 오류: ${response.status}` }));
+                    throw new Error(errorData.error);
+                }
 
-                results.forEach(data => {
-                    if (data.error) {
-                        resultContainer.innerHTML += `<div class="result-card error"><h3>❌ ${data.domain} 조회 실패</h3><p>${data.error}</p></div>`;
-                    } else {
-                        const { domain, expiry_date, creation_date, updated_date, registrar, domain_status } = data;
-                        const daysUntil = getDaysUntilExpiry(expiry_date);
-                        let statusColor = '#4facfe', statusText = '정상';
-                        if (daysUntil !== null) {
-                            if (daysUntil < 0) { statusColor = '#fa709a'; statusText = '만료됨'; }
-                            else if (daysUntil <= 30) { statusColor = '#fee140'; statusText = '만료 임박'; }
-                            else if (daysUntil <= 90) { statusColor = '#ffa726'; statusText = '갱신 권장'; }
-                        }
-                        
-                        let html = `
-                            <div class="result-card success">
-                                <button class="copy-btn" onclick="copyResults(this, '${domain}')">결과 복사</button>
-                                <h3 style="margin-bottom: 20px;">📋 ${domain} 정보</h3>
-                                <div class="domain-info">
-                                    <div class="info-item"><span class="info-label">등록업체:</span><span class="info-value">${registrar || '정보 없음'}</span></div>
-                                    <div class="info-item"><span class="info-label">등록일:</span><span class="info-value">${formatDate(creation_date)}</span></div>
-                                    <div class="info-item"><span class="info-label">만료일:</span><span class="info-value">${formatDate(expiry_date)}</span></div>
-                                    <div class="info-item"><span class="info-label">최근 업데이트:</span><span class="info-value">${formatDate(updated_date)}</span></div>
-                                    <div class="info-item"><span class="info-label">남은 일수:</span><span class="info-value">${daysUntil >= 0 ? daysUntil + '일' : '만료됨'}</span></div>
-                                    <div class="info-item"><span class="info-label">만료 상태:</span><span class="info-value" style="color: ${statusColor};">⚫ ${statusText}</span></div>
-                                    <div class="info-item"><span class="info-label">도메인 상태:</span><span class="info-value">${domain_status || '정보 없음'}</span></div>
-                                </div>
-                            </div>`;
-                        resultContainer.innerHTML += html;
-                        saveToHistory(domain);
-                    }
-                });
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const { expiry_date, creation_date, registrar } = data;
+                const daysUntil = getDaysUntilExpiry(expiry_date);
+                
+                let statusColor = '#4facfe', statusText = '정상';
+                if (daysUntil !== null) {
+                    if (daysUntil < 0) { statusColor = '#fa709a'; statusText = '만료됨'; }
+                    else if (daysUntil <= 30) { statusColor = '#fee140'; statusText = '만료 임박'; }
+                    else if (daysUntil <= 90) { statusColor = '#ffa726'; statusText = '갱신 권장'; }
+                }
+
+                let html = `
+                    <h3 style="margin-bottom: 20px; color: white;">📋 ${domain} 정보</h3>
+                    <div class="domain-info">
+                        <div class="info-item"><span class="info-label">도메인:</span><span class="info-value">${domain}</span></div>
+                        <div class="info-item"><span class="info-label">등록업체:</span><span class="info-value">${registrar || '정보 없음'}</span></div>
+                        <div class="info-item"><span class="info-label">등록일:</span><span class="info-value">${formatDate(creation_date)}</span></div>
+                        <div class="info-item"><span class="info-label">만료일:</span><span class="info-value">${formatDate(expiry_date)}</span></div>
+                        <div class="info-item"><span class="info-label">남은 일수:</span><span class="info-value">${daysUntil >= 0 ? daysUntil + '일' : '만료됨'}</span></div>
+                        <div class="info-item"><span class="info-label">만료 상태:</span><span class="info-value" style="color: ${statusColor};">⚫ ${statusText}</span></div>
+                    </div>
+                `;
+                
+                showSuccess(html);
 
             } catch (error) {
-                resultContainer.innerHTML = `<div class="result-card error"><h3>❌ 전체 조회 실패</h3><p>${error.message}</p></div>`;
+                console.error('Error:', error);
+                showError(`오류가 발생했습니다: ${error.message}`);
             } finally {
                 checkBtn.disabled = false;
                 btnText.textContent = '만료일 확인';
             }
         }
-        
-        async function generateDomainNames() {
-            const keywordsInput = document.getElementById('keywordsInput');
-            const generatorBtn = document.getElementById('generatorBtn');
-            const resultContainer = document.getElementById('generatorResultContainer');
-            const keywords = keywordsInput.value.trim();
 
-            if (!keywords) {
-                resultContainer.innerHTML = `<div class="result-card error"><h3>❌ 입력 오류</h3><p>키워드를 입력해주세요.</p></div>`;
-                return;
-            }
-
-            generatorBtn.disabled = true;
-            generatorBtn.querySelector('span').textContent = '생성 중...';
-            resultContainer.innerHTML = `<div class="result-card success"><div class="loading" style="border-top-color: #667eea;"></div> AI가 도메인을 생성 중입니다...</div>`;
-
-            try {
-                const response = await fetch(`/.netlify/functions/generate-names?keywords=${encodeURIComponent(keywords)}`);
-                if (!response.ok) throw new Error(`서버 오류: ${response.status}`);
-                const data = await response.json();
-                
-                let html = '<div class="result-card success"><h3>💡 AI 추천 도메인</h3><ul>';
-                data.domains.forEach(name => {
-                    html += `<li><a href="#" onclick="checkGeneratedDomain('${name}')">${name}</a></li>`;
-                });
-                html += '</ul></div>';
-                resultContainer.innerHTML = html;
-
-            } catch (error) {
-                resultContainer.innerHTML = `<div class="result-card error"><h3>❌ 생성 실패</h3><p>${error.message}</p></div>`;
-            } finally {
-                generatorBtn.disabled = false;
-                generatorBtn.querySelector('span').textContent = 'AI로 이름 생성';
-            }
-        }
-        
-        function checkGeneratedDomain(domain) {
-            document.getElementById('domainInput').value = domain;
-            openTab({currentTarget: document.querySelector('.tab-button')}, 'Checker');
-            checkDomains();
+        function showSuccess(html) {
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            result.className = 'result success show';
+            resultContent.innerHTML = html;
         }
 
-        function formatDate(dateString) {
-            if (!dateString) return '정보 없음';
-            try { return new Date(dateString).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }); }
-            catch (e) { return dateString; }
+        function showError(message) {
+            const result = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            result.className = 'result error show';
+            resultContent.innerHTML = `<h3 style="margin-bottom: 15px;">❌ 오류</h3><p>${message}</p>`;
         }
 
-        function getDaysUntilExpiry(expiryDate) {
-            if (!expiryDate) return null;
-            try { return Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24)); }
-            catch (e) { return null; }
-        }
-
-        window.onload = () => {
+        window.onload = function() {
             document.getElementById('domainInput').focus();
-            loadHistory();
         };
     </script>
 </body>
