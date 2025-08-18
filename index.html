@@ -337,13 +337,16 @@
             result.classList.remove('show');
 
             try {
-                const response = await fetch(`https://proxy.cors.sh/https://whois.json.is/${domain}`, {
-                    headers: {'x-cors-api-key': 'temp_03031065e70f269a8e91280b85fb4578'}
-                });
+                // [FIX] CORS 오류 해결을 위해 더 안정적인 프록시 서비스로 변경
+                const encodedUrl = encodeURIComponent(`https://whois.json.is/${domain}`);
+                const response = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`);
                 
-                if (!response.ok) throw new Error(`도메인 정보를 가져올 수 없습니다. (상태: ${response.status})`);
+                if (!response.ok) throw new Error(`프록시 서버 오류: ${response.status}`);
 
-                const data = await response.json();
+                const proxyData = await response.json();
+                // allorigins 프록시는 실제 응답을 'contents' 필드에 문자열로 담아주므로, JSON으로 파싱해야 합니다.
+                const data = JSON.parse(proxyData.contents);
+
                 if (data.error) throw new Error('등록되지 않았거나 조회할 수 없는 도메인입니다.');
 
                 const expiryDate = data.expires_date || data.expiration_date;
